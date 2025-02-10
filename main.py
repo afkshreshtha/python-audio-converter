@@ -8,12 +8,19 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 
+# Function to download and install FFmpeg
+def install_ffmpeg():
+    if not os.path.exists("/usr/local/bin/ffmpeg"):
+        os.system("apt update && apt install -y ffmpeg")
+
 @app.get("/")
 async def root():
     return {"message": "FastAPI running on Koyeb"}
 
 @app.get("/convert")
 async def convert_audio(url: str):
+    install_ffmpeg()  # Ensure FFmpeg is installed before running subprocess
+
     with tempfile.NamedTemporaryFile(suffix=".m4a", delete=False) as input_file:
         input_path = input_file.name
     
@@ -27,7 +34,7 @@ async def convert_audio(url: str):
     with open(input_path, "wb") as file:
         file.write(response.content)
 
-    command = ["ffmpeg", "-i", input_path, "-q:a", "2", output_path]
+    command = ["/usr/bin/ffmpeg", "-i", input_path, "-q:a", "2", output_path]
     try:
         subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     except subprocess.CalledProcessError as e:
@@ -39,4 +46,4 @@ async def convert_audio(url: str):
     if not output_file.exists():
         raise HTTPException(status_code=500, detail="Conversion failed, output file not found")
 
-    return FileResponse(output_file.as_posix(), filename="converted.mp3", media_type="audio/mpeg")
+    return FileResponse(output_file, filename="converted.mp3", media_type="audio/mpeg")
