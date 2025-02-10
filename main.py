@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from mangum import Mangum  # Vercel needs this
 
 app = FastAPI()
 
@@ -41,6 +42,5 @@ async def convert_audio(url: str):
 
     return FileResponse(output_file, filename="converted.mp3", media_type="audio/mpeg")
 
-# Vercel needs this
-def handler(event, context):
-    return app
+# Required for Vercel
+handler = Mangum(app)
