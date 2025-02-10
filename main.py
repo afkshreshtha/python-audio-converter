@@ -5,13 +5,12 @@ import subprocess
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
-from mangum import Mangum  # Vercel needs this
 
 app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "FastAPI running on Vercel"}
+    return {"message": "FastAPI running on Koyeb"}
 
 @app.get("/convert")
 async def convert_audio(url: str):
@@ -40,7 +39,4 @@ async def convert_audio(url: str):
     if not output_file.exists():
         raise HTTPException(status_code=500, detail="Conversion failed, output file not found")
 
-    return FileResponse(output_file, filename="converted.mp3", media_type="audio/mpeg")
-
-# Required for Vercel
-handler = Mangum(app)
+    return FileResponse(output_file.as_posix(), filename="converted.mp3", media_type="audio/mpeg")
